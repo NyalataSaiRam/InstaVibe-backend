@@ -1,13 +1,13 @@
 const User = require("../models/user.schema");
 
-const handleLogin =async (req, res) => {
+const handleLogin = async (req, res) => {
     const { email, password } = req.body;
-    
+
     try {
         const token = await User.MatchPasswordAndGenerateToken(email, password);
-        return res.json({token: token});
+        return res.json({ token: token });
     } catch (error) {
-        return res.status(500).json({
+        return res.status(401).json({
             error: error
         });
     }
@@ -15,7 +15,7 @@ const handleLogin =async (req, res) => {
 
 const handleSingUp = async (req, res) => {
     const { username, email, password } = req.body;
-    
+
 
     try {
         signUpValidation(req.body);
@@ -23,12 +23,12 @@ const handleSingUp = async (req, res) => {
             username,
             email,
             password,
-            posts:0,
+            posts: 0,
         });
         user.save();
         return res.status(201).json({ success: true });
     } catch (err) {
-        console.log(err)
+        console.log(err);
         return res.status(500).json({ error: err });
     }
 };
@@ -54,49 +54,49 @@ function signUpValidation(data) {
 
 const getFollowers = async (req, res) => {
     const id = req.params.id;
-    const followers = await User.findById(id).populate([{
+    const followers = await User.findById(id).populate([ {
         path: 'followers',
         select: 'username profilePic email'
-    }])
+    } ]);
 
-    if(!followers) return res.status(404).json({msg: "no users found"});
+    if (!followers) return res.status(404).json({ msg: "no users found" });
 
-    return res.status(200).json(followers)
+    return res.status(200).json(followers);
 
 
-}
+};
 const getFollowing = async (req, res) => {
     const id = req.params.id;
-    const following = await User.findById(id, {following:1}).populate([{
+    const following = await User.findById(id, { following: 1 }).populate([ {
         path: 'following',
         select: 'username profilePic email'
-    }])
+    } ]);
 
-    if(!following) return res.status(404).json({msg: "no users found"});
+    if (!following) return res.status(404).json({ msg: "no users found" });
 
-    return res.status(200).json(following)
-}
+    return res.status(200).json(following);
+};
 
 const deleteFollowers = async (req, res) => {
     const otherid = req.params.id;
     const myid = req.user.id;
 
-    const me = await User.findByIdAndUpdate(myid, { $pull: { followers: otherid } }, {new:true});
-    const other = await User.findByIdAndUpdate(otherid, { $pull: { following: myid } }, {new:true});
+    const me = await User.findByIdAndUpdate(myid, { $pull: { followers: otherid } }, { new: true });
+    const other = await User.findByIdAndUpdate(otherid, { $pull: { following: myid } }, { new: true });
 
-    return res.status(200).json({me, other})
+    return res.status(200).json({ me, other });
 
-}
+};
 
 const deleteFollowing = async (req, res) => {
     const otherid = req.params.id;
     const myid = req.user.id;
 
-    const me = await User.findByIdAndUpdate(myid, { $pull: { following: otherid } }, {new:true});
-    const other = await User.findByIdAndUpdate(otherid, { $pull: { followers: myid } }, {new:true});
+    const me = await User.findByIdAndUpdate(myid, { $pull: { following: otherid } }, { new: true });
+    const other = await User.findByIdAndUpdate(otherid, { $pull: { followers: myid } }, { new: true });
 
-    return res.status(200).json(me)
-}
+    return res.status(200).json(me);
+};
 
 
 module.exports = {
